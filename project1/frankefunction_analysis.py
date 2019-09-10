@@ -18,28 +18,30 @@ def franke_function(x,y):
 
 
 z = franke_function(x,y)
+z_flat = np.ravel(z)
 
-#design matrix for x, second order polynomial
-X1 = np.zeros((20,3))
-X1[:,0] = 1
+#def design_matrix_degree_p(x,y,p):
+#    X = np.c_(np.ones(len(x)))
+#    return X
+x_flat = np.ravel(x)
+y_flat = np.ravel(y)
 
-for i in range(20):
-    X1[i,1] = x[i]
-    X1[i,2] = x[i]**2
+X = np.c_[np.ones(400),x_flat,y_flat,x_flat**2, y_flat**2, x_flat*y_flat]
+
 
 # manual inversion
-beta = np.linalg.inv(X1.T.dot(X1)).dot(X1.T).dot(z_flat)
+beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z_flat)
+
 
 # scikit-learn
-clf = skl.LinearRegression().fit(X1,y)
-y_tilde = clf.predict(X1)
+clf = skl.LinearRegression().fit(X,z_flat)
+z_tilde = clf.predict(X)
 
 # MSE
-MSE = mean_squared_error(y,y_tilde)
+MSE = mean_squared_error(z_flat,z_tilde)
 
 # R²
-R_squared = r2_score(y,y_tilde)
+R_squared = r2_score(z_flat,z_tilde)
 
 print("MSE: %.2f" %MSE)
 print("R_squared: %.2f" %R_squared)
-#design matrix for y
