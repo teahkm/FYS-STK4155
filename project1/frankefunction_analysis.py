@@ -17,15 +17,16 @@ def franke_function(x,y):
     return term1 + term2 + term3 + term4
 
 
-z = franke_function(x,y)
+
+z = franke_function(x,y) #+ np.random.randn(20,20)
 z_flat = np.ravel(z)
 
-#def design_matrix_degree_p(x,y,p):
-#    X = np.c_(np.ones(len(x)))
-#    return X
+
 x_flat = np.ravel(x)
 y_flat = np.ravel(y)
 
+# need to make a function for arbitrary order
+# design matrix for order 2
 X = np.c_[np.ones(400),x_flat,y_flat,x_flat**2, y_flat**2, x_flat*y_flat]
 
 
@@ -45,3 +46,16 @@ R_squared = r2_score(z_flat,z_tilde)
 
 print("MSE: %.2f" %MSE)
 print("R_squared: %.2f" %R_squared)
+
+
+# variance of betas
+var_beta = np.linalg.inv(X.T.dot(X))
+
+# confidence interval for betas
+for b in range(len(beta)):
+    #sigma squared is 1
+    var_b = var_beta[b][b]
+    #print (var_b)
+    upper = beta[b] + 1.96*np.sqrt(var_b)
+    lower = beta[b] - 1.96*np.sqrt(var_b)
+    print("Confidence interval: [%g,%g]" %(lower, upper))
