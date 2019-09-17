@@ -17,12 +17,20 @@ y_flat = np.ravel(y)
 X = CreateDesignMatrix_X(x,y,n=2)
 
 # manual inversion
-beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z_flat)
+#beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z_flat)
+
+def OLS(X, y):
+    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    ytilde = X.dot(beta)
+
+    return beta, ytilde
 
 
 # scikit-learn
-clf = skl.LinearRegression().fit(X,z_flat)
-z_tilde = clf.predict(X)
+#clf = skl.LinearRegression().fit(X,z_flat)
+#z_tilde = clf.predict(X)
+
+beta, z_tilde = OLS(X, z_flat)
 
 # MSE
 MSE = mean_squared_error(z_flat,z_tilde)
