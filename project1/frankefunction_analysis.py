@@ -19,18 +19,30 @@ X = CreateDesignMatrix_X(x,y,n=2)
 # manual inversion
 #beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(z_flat)
 
-def OLS(X, y):
-    beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
-    ytilde = X.dot(beta)
+#def OLS(X, y):
+    #beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    #ytilde = X.dot(beta)
 
-    return beta, ytilde
+    #return beta, ytilde
 
+# FIX
+def OLS_fit(X,y):
+    #pseudo inverse, SVD
+    A = np.linalg.pinv(X)
+    beta = A.dot(y)
+    #beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    return beta
+
+def OLS_predict(beta, X):
+    return X.dot(beta)
 
 # scikit-learn
 #clf = skl.LinearRegression().fit(X,z_flat)
 #z_tilde = clf.predict(X)
 
-beta, z_tilde = OLS(X, z_flat)
+#beta, z_tilde = OLS(X, z_flat)
+beta = OLS_fit(X,z_flat)
+z_tilde = OLS_predict(beta, X)
 
 # MSE
 MSE = mean_squared_error(z_flat,z_tilde)
