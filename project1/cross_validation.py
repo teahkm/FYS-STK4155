@@ -55,7 +55,7 @@ def k_fold_cross_validation(X, z, k=5):
 
         #evaluate MSE
         MSE.append(np.mean((z_test - z_tilde)**2))
-        bias.append((z_test - np.mean(z_tilde))**2)
+        bias.append(np.mean((z_test - np.mean(z_tilde))**2))
         variance.append(np.var(z_tilde))
 
     tot_err = np.mean(MSE)
