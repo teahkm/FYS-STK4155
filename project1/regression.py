@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.linear_model import Lasso
 
 def franke_function(x,y):
     """
@@ -38,8 +39,22 @@ def CreateDesignMatrix_X(x, y, n = 5):
 
 	return X
 
+def SVDinv(A):
+    ''' Takes as input a numpy matrix A and returns inv(A) based on singular value decomposition (SVD).
+    SVD is numerically more stable than the inversion algorithms provided by
+    numpy and scipy.linalg at the cost of being slower.
+    '''
+    U, s, VT = np.linalg.svd(A)
+
+    D = np.zeros((len(U),len(VT)))
+    for i in range(0,len(VT)):
+        D[i,i]=s[i]
+    UT = np.transpose(U); V = np.transpose(VT); invD = np.linalg.inv(D)
+    return np.matmul(V,np.matmul(invD,UT))
+
+
 def OLS_fit(X,y):
-    """ A function that caluculates the coefficients beta_i in linear regression.
+    """ A function that caluculates the coefficients beta_i in ordinary least squares.
 
         Args:
             X (matrix): design matrix
@@ -49,13 +64,14 @@ def OLS_fit(X,y):
             beta (array): regression coefficients
     """
     #pseudo inverse, SVD
-    A = np.linalg.pinv(X)
-    beta = A.dot(y)
-    #beta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    #A = np.linalg.pinv(X)
+    inv = SVDinv(X.T.dot(X))
+    #beta = A.dot(y)
+    beta = inv.dot(X.T).dot(y)
     return beta
 
 def OLS_predict(beta, X):
-    """ A function that predicts a value using linear regression.
+    """ A function that predicts a value using ordinary least squares.
 
         Args:
             beta (array): regression coefficients
@@ -79,7 +95,9 @@ def Ridge_fit(X, y, _lambda=0.1):
     """
 
     XtX = X.T.dot(X) #help variable
-    beta = np.linalg.inv(XtX + _lambda*np.identity(len(XtX[0]))).dot(X.T).dot(y)
+    inv = SVDinv(XtX + _lambda*np.identity(len(XtX[0])))
+    #beta = np.linalg.inv(XtX + _lambda*np.identity(len(XtX[0]))).dot(X.T).dot(y)
+    beta = inv.dot(X.T).dot(y)
     return beta
 
 def Ridge_predict(beta, X):
@@ -93,6 +111,20 @@ def Ridge_predict(beta, X):
             predicted value of X times beta
     """
     return X.dot(beta)
+
+def Lasso_fit(X, y, _lambda=0.1):
+    clf = Lasso(alpha=_lambda)
+    clf.fit(X, y)
+    beta = np.zeros(len(clf.coef_)+1)
+    beta[0] = clf.intercept_
+    beta[1:] = clf.coef_
+    return beta, #clf
+
+#def Lasso_predict(X, y, _lambda=0.1):
+#    clf = Lasso(alpha=_lambda)
+#    clf.fit(X,y)
+#    return clf.predict(X)
+
 
 def k_fold_cross_validation(X, z, k=5, fit_type=OLS_fit, predict_type= OLS_predict, **parameters):
     """ A function that predicts a value using linear regression.
