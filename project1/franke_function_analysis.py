@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 import regression as reg
 import pandas as pd
 import matplotlib.cm as cm
+import seaborn as sns
 
 np.random.seed(14)
 # make data points
@@ -220,8 +221,13 @@ def Lasso_analysis():
 
     #print(MSEs_kfold)
     fig, ax = plt.subplots()
-    i = ax.imshow(MSEs_kfold, cmap=cm.jet, interpolation='nearest',extent=[1,5,-5,2])
-    fig.colorbar(i)
+    #i = ax.imshow(MSEs_kfold, cmap=cm.jet, interpolation='nearest',extent=[1,5,-5,2])
+    sns.heatmap(MSEs_kfold,xticklabels=degrees, yticklabels=np.log10(lambdas))
+    plt.xlabel('Polynomial degree')
+    plt.ylabel('log(lambda)')
+    plt.title('MSE as function of lambda and complexity with Lasso regression')
+    plt.tight_layout()
+    #fig.colorbar(i)
     #ax = heatmap(MSEs_kfold)
     plt.show()
 
