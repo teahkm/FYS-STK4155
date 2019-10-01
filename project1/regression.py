@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 def franke_function(x,y):
     """
@@ -128,7 +129,7 @@ def Lasso_predict(beta, X):
 
 
 
-def k_fold_cross_validation(X, z, k=5, fit_type=OLS_fit, predict_type= OLS_predict, tradeoff = False, **parameters):
+def k_fold_cross_validation(X, z, k=10, fit_type=OLS_fit, predict_type= OLS_predict, tradeoff = False, **parameters):
     """ A function that predicts a value using linear regression.
 
         Args:
@@ -176,7 +177,10 @@ def k_fold_cross_validation(X, z, k=5, fit_type=OLS_fit, predict_type= OLS_predi
             MSE_train.append(np.mean((z_train - z_tilde_train)**2))
             #bias.append(np.mean((z_test - np.mean(z_tilde_test))**2))
             #variance.append(np.var(z_tilde_test))
-            return MSE_test, MSE_train
+
+            tot_err_test = np.mean(MSE_test)
+            tot_err_train = np.mean(MSE_train)
+            return tot_err_test, tot_err_train
 
     else:
         X_shuf_train, X_shuf_test, z_shuf_train, z_shuf_test = train_test_split(
@@ -209,56 +213,35 @@ def k_fold_cross_validation(X, z, k=5, fit_type=OLS_fit, predict_type= OLS_predi
     # average the results
         print("z_test: ", z_shuf_test.shape)
         print("z_pred: ", z_all_preds.shape)
-        tot_err_test = np.mean((z_shuf_test - np.mean(z_all_preds, axis=1))**2 )
+
+        tot_err_test = mean_squared_error(z_shuf_test, np.mean(z_all_preds, axis=1))
+        #tot_err_test = np.mean( np.mean((z_shuf_test - np.mean(z_all_preds))**2, axis=1) )
+        #tot_err_test = np.mean( np.mean((z_shuf_test - np.mean(z_all_preds,axis=1))**2, axis=1) )
+        #tot_err_test = np.mean(np.mean((z_shuf_test - np.mean(z_all_preds, axis=1))**2))
+        #tot_err_test = np.mean( (z_shuf_test - np.mean(z_all_preds, axis=1, keepdims=True))**2 )
         tot_bias = np.mean( (z_shuf_test - np.mean(z_all_preds, axis=1, keepdims=True))**2 )
         tot_var = np.mean( np.var(z_all_preds, axis=1) )
 
         return tot_err_test, tot_bias, tot_var
 
-    """MSE_train = []
-    MSE_test = []
-    bias = []
-    variance = []
+def bootstrap(X, z, num_bootstraps, fit_type=OLS_fit, predict_type= OLS_predict, **parameters):
+    from sklearn.utils import resample
 
-    # shuffling data
-    index = np.random.permutation(np.arange(len(z)))
-    X_shuffled = X[index]
-    z_shuffled = z[index]
+    X_train, X_test, z_train, z_test = train_test_split(X, z, test_size = 0.33)
+    z_pred = np.empty((z_test.shape[0], num_bootstraps)) #collects all the predictions
 
-    # split into folds
-    i = np.arange(len(z)) % k
-    print(i.shape)
-    z_pred = np.empty((z[i==1].shape[0], k))
-    z_test_arr = np.empty((z[i==1].shape[0], k))
-    for fold in range(k):
-        X_test = X_shuffled[i==fold]
-        X_train = X_shuffled[i!=fold]
-        z_test = z_shuffled[i==fold]
-        z_train = z_shuffled[i!=fold]
+    for i in range(num_bootstraps):
+        X_, z_ = resample(X_train, z_train)
+        beta_train = fit_type(X_, z_, **parameters)
+        z_tilde = predict_type(beta_train, X_test) #prediction for current iteration
+        z_pred[:,i] = z_tilde
 
-        z_test_arr[:, fold] = z_test
+    # change shape of z_test so dimensions in subtraction are compatible
+    z_test = z_test[:,np.newaxis]
 
-        # fit model
-        beta_train = fit_type(X_train, z_train, **parameters)
-        z_tilde =predict_type(beta_train, X_test).ravel()
-        print(predict_type(beta_train, X_test).shape)
-        print(z_pred.shape)
-        z_pred[:, fold] = z_tilde
 
-        # evaluate MSE, bias, variance
-        MSE_test.append(np.mean((z_test - z_tilde)**2))
-        MSE_train.append(np.mean((z_train - z_tilde)**2))
-        #bias.append(np.mean((z_test - np.mean(z_tilde))**2))
-        #variance.append(np.var(z_tilde))
-
-    # average the results
-    #MSE_test = np.mean( np.mean((z_test_arr - z_pred)**2, axis=1) )
-    bias = np.mean( (z_test_arr - np.mean(z_pred, axis=1, keepdims=True))**2 )
+    error = np.mean( np.mean((z_test - z_pred)**2, axis=1) )
+    bias = np.mean( (z_test - np.mean(z_pred, axis=1, keepdims=True))**2 )
     variance = np.mean( np.var(z_pred, axis=1) )
-    #tot_err = np.mean(MSE)
-    #tot_bias = np.mean(bias)
-    #tot_var = np.mean(variance)
 
-    return MSE_test, MSE_train, bias, variance
-    #return tot_err, tot_bias, tot_var
-"""
+    return error, bias, variance
