@@ -54,6 +54,35 @@ def SVDinv(A):
     UT = np.transpose(U); V = np.transpose(VT); invD = np.linalg.inv(D)
     return np.matmul(V,np.matmul(invD,UT))
 
+def CI_beta(X, beta):
+    ''' A function that calculates the upper and lower boundaries of a 95 percent confidence
+        interval for the coefficients beta in linear regression, when sigma squared is 1.
+
+        Args:
+            X (matrix): the design matrix for the regression model
+            beta (array): the coefficient values calculated in linear regression
+        Returns:
+            uppers (array): the upper boundary values
+            lowers (array): the lower boundary values
+    '''
+
+    # variance of betas
+    var_beta = np.linalg.inv(X.T.dot(X))
+
+    # confidence interval for betas
+    uppers = np.zeros(len(beta))
+    lowers = np.zeros(len(beta))
+
+    for b in range(len(beta)):
+        #sigma squared is 1
+        var_b = var_beta[b][b]
+        upper = beta[b] + 1.96*np.sqrt(var_b)
+        lower = beta[b] - 1.96*np.sqrt(var_b)
+        uppers[b] = upper
+        lowers[b] = lower
+
+    return uppers, lowers
+
 
 def OLS_fit(X,y):
     """ A function that caluculates the coefficients beta_i in ordinary least squares.
@@ -156,7 +185,6 @@ def k_fold_cross_validation(X, z, k=10, fit_type=OLS_fit, predict_type= OLS_pred
     z_shuffled = z[index]
 
     # split into folds
-
 
     if not tradeoff:
         i = np.arange(len(z)) % k
