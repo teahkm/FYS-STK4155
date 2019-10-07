@@ -1,4 +1,4 @@
-# file with all the parts concerning the Franke function
+# file with all the parts concerning the Franke function (parts a-e)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +12,7 @@ import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
+# ensure same random noise every time program is run
 np.random.seed(14)
 
 # make data points
@@ -26,7 +27,7 @@ z_flat = z_flat + np.random.normal(0, 1, z_flat.shape[0])
 # standard regression polynomials up to degree 5
 maxdegree = 5
 
-# all analysis involving the OLS method on the Franke function
+# all analysis involving the OLS method on the Franke function (part a)
 def OLS_analysis():
     print('Analysis for OLS')
 
@@ -79,7 +80,7 @@ def OLS_analysis():
 
         # fitting with k-fold cross validation
         MSE_kf = reg.k_fold_cross_validation(
-            X,z_flat, 5, reg.OLS_fit, reg.OLS_predict)[0]
+                X,z_flat, 5, reg.OLS_fit, reg.OLS_predict)[0]
         MSEs[degree-1][3] = MSE_kf
 
         # train vs test and bias/variance calculations using bootstrap
@@ -118,7 +119,7 @@ def OLS_analysis():
     tab = df.to_latex(index=False, float_format="%.5f")
     print(f"\n\n{tab}\n\n")
 
-    # plot test vs train MSE using bootstrap
+    # plot test vs train MSE using bootstrap or CV
     sns.set();
     plt.plot(degrees, error_test, label='Test MSE')
     plt.plot(degrees, error_train, label='Train MSE')
@@ -140,12 +141,11 @@ def OLS_analysis():
     plt.show()
 
 
-
+# all analysis for the Franke function involving Ridge regression (part d)
 def Ridge_analysis():
     print('Analysis for Ridge')
 
     lambdas = [10**i for i in range(-5,2)]  # lambda values to test
-    print(lambdas[4])
     degrees = [i for i in range(1,maxdegree+1)] # complexities to test
 
     MSEs = np.zeros((maxdegree,4)) # collection of MSEs for a given lambda
@@ -156,6 +156,7 @@ def Ridge_analysis():
 
     MSEs_kfold = np.zeros((len(lambdas),maxdegree)) # for plotting heatmap
 
+    # for bias-variance tradeoff
     error_test = np.zeros(maxdegree)
     error_train = np.zeros(maxdegree)
     bias = np.zeros(maxdegree)
@@ -170,7 +171,7 @@ def Ridge_analysis():
         for lam in lambdas:
 
             MSE_kfold = reg.k_fold_cross_validation(
-                X,z_flat, 5, reg.Ridge_fit, reg.Ridge_predict, _lambda=lam)[0]
+                        X,z_flat, 5, reg.Ridge_fit, reg.Ridge_predict, _lambda=lam)[0]
 
             MSEs_kfold[lam_index][degree-1] = MSE_kfold
             lam_index += 1
@@ -201,7 +202,7 @@ def Ridge_analysis():
         R2s[degree-1][2] = R_squared
 
         # kfold into table
-        MSEs[degree-1][3] = MSEs_kfold[4][degree-1] #check to see that this is actually the same lambda
+        MSEs[degree-1][3] = MSEs_kfold[4][degree-1]
 
         # train vs test and bias/variance calculations using bootstrap for chosen lambda
         e, e2, b, v = reg.bootstrap(X, z_flat, 100, fit_type=reg.Ridge_fit, predict_type= reg.Ridge_predict, _lambda=lambdas[4])
@@ -237,9 +238,10 @@ def Ridge_analysis():
     plt.tight_layout()
     plt.show()
 
+    # find minimum MSE from kFold
     print(MSEs_kfold.min())
 
-    # plot test vs train MSE using bootstrap for chosen lambda
+    # plot test vs train MSE using bootstrap/CV for chosen lambda
     sns.set();
     plt.plot(degrees, error_test, label='Test MSE')
     plt.plot(degrees, error_train, label='Train MSE')
@@ -260,9 +262,8 @@ def Ridge_analysis():
     plt.legend()
     plt.show()
 
-    print(lambdas[4])
 
-
+# all analysis for Franke function involving Lasso regression (part e)
 def Lasso_analysis():
     print('Analysis for Lasso')
 
@@ -277,6 +278,7 @@ def Lasso_analysis():
 
     MSEs_kfold = np.zeros((len(lambdas),maxdegree)) # for plotting heatmap
 
+    # for bias-variance tradeoff
     error_test = np.zeros(maxdegree)
     error_train = np.zeros(maxdegree)
     bias = np.zeros(maxdegree)
@@ -291,7 +293,7 @@ def Lasso_analysis():
         for lam in lambdas:
 
             MSE_kfold = reg.k_fold_cross_validation(
-                X,z_flat, 5, reg.Lasso_fit, reg.Lasso_predict, _lambda=lam)[0]
+                        X,z_flat, 5, reg.Lasso_fit, reg.Lasso_predict, _lambda=lam)[0]
 
             MSEs_kfold[lam_index][degree-1] = MSE_kfold
             lam_index += 1
@@ -309,7 +311,7 @@ def Lasso_analysis():
         print(R_squared)
         R2s[degree-1][1] = R_squared
 
-        # fitting with resampling using best lambda based on k fold
+        # fitting with resampling
         X_train, X_test, z_train, z_test = train_test_split(X, z_flat, test_size = 0.33)
         model_train = reg.Lasso_fit(X_train, z_train, _lambda=1)
         z_tilde = reg.Lasso_predict(model_train, X_test)
@@ -323,7 +325,7 @@ def Lasso_analysis():
         R2s[degree-1][2] = R_squared
 
         # kfold into table
-        MSEs[degree-1][3] = MSEs_kfold[6][degree-1] #check to see that this is actually the same lambda
+        MSEs[degree-1][3] = MSEs_kfold[6][degree-1]
 
         # train vs test and bias/variance calculations using bootstrap for chosen lambda
         e, e2, b, v = reg.bootstrap(X, z_flat, 100, fit_type=reg.Lasso_fit, predict_type= reg.Lasso_predict, _lambda=1)
@@ -358,7 +360,7 @@ def Lasso_analysis():
     plt.tight_layout()
     plt.show()
 
-    # plot test vs train MSE using bootstrap for chosen lambda
+    # plot test vs train MSE using bootstrap or CV for chosen lambda
     sns.set();
     plt.plot(degrees, error_test, label='Test MSE')
     plt.plot(degrees, error_train, label='Train MSE')
@@ -379,8 +381,10 @@ def Lasso_analysis():
     plt.legend()
     plt.show()
 
+    # find minimum MSE from kFold
     print(MSEs_kfold.min())
 
+# plotting surface of the data
 def plot_surface(surface, title):
     sns.set()
     fig = plt.figure()
@@ -391,6 +395,7 @@ def plot_surface(surface, title):
     plt.title(title)
     plt.show()
 
+# plotting chosen model
 def plot_best_fit(data, title):
     X = reg.CreateDesignMatrix_X(x,y,n=5)
     beta = reg.OLS_fit(X,data)
@@ -406,9 +411,4 @@ def plot_best_fit(data, title):
 
 #Ridge_analysis()
 #OLS_analysis()
-Lasso_analysis()
-#confidence interval for betas
-
-#train test split
-
-# k fold mse
+#Lasso_analysis()
