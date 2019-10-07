@@ -1,6 +1,6 @@
 # Project 1
 
-This folder contains the solution to project 1: Regression analysis and resampling methods.
+This folder contains the solution to project 1: _Regression analysis and resampling methods_.
 
 ## Data
 
@@ -25,7 +25,7 @@ All the function calls have been commented out. To get any results when running 
 
 * **part a**: found in the function `OLS_analysis()`
 * **part d**: found in the function `Ridge_analysis()`
-* **part e**: found in the function `Lasso_analysis()` 
+* **part e**: found in the function `Lasso_analysis()`
 
 How to run:
 
@@ -35,7 +35,7 @@ python3 franke_function_analysis.py
 
 ### terrain_analysis.py
 
-The file `franke_function_analysis.py` contains the solutions to all the parts about the terrain data (parts f and g).
+The file `terrain_analysis.py` contains the solutions to all the parts about the terrain data (parts f and g).
 All the function calls have been commented out. To get any results when running this code, these have to be uncommented.
 
 How to run:
